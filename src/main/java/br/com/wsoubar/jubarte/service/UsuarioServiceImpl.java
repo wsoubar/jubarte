@@ -17,6 +17,7 @@ public class UsuarioServiceImpl implements UsuarioService {
 
     @Override
     public List<Usuario> getAllUsuarios() {
+        // return Streamable.of(usuRepo.findAll()).toList();
         return usuRepo.findAll();
     }
 
