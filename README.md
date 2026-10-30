@@ -1,0 +1,107 @@
+# Jubarte 🐋
+
+Controle financeiro pessoal em português do Brasil, com tema claro, React, Vite, TypeScript, Tailwind CSS, componentes baseados em shadcn/ui e Supabase. Identidade: azul oceano, turquesa e uma baleia jubarte saltando.
+
+## O que está incluído
+
+- Login e recuperação de senha; somente usuários autorizados têm acesso aos dados.
+- Contas com saldo inicial, categorias, lançamentos manuais e transferências atômicas.
+- Pagamentos e pendências, saldo realizado e projetado, filtros e paginação.
+- Dashboard, comparativos mensais e relatórios PDF com gráficos e detalhamento.
+- Layout responsivo e demonstração em memória, separada dos dados reais.
+
+## Executar
+
+Node.js 22.12+ (ou 24) e npm:
+
+```sh
+npm ci
+cp .env.example .env.local
+npm run dev
+```
+
+Sem variáveis, o aplicativo permite explorar uma demonstração fictícia. As alterações da demonstração são descartadas ao recarregar/sair; nenhum dado real fica no localStorage. Sessões de autenticação seguem o armazenamento padrão do Supabase.
+
+```sh
+npm test
+npm run test:e2e
+npm run build
+npm run preview
+```
+
+Os testes de navegador usam Chromium em `/usr/bin/chromium` localmente; no CI, instalam o navegador do Playwright. Para outro sistema, ajuste `executablePath` em `playwright.config.ts`.
+
+## Configurar Supabase compartilhado
+
+1. Faça um backup do projeto e revise a migração `supabase/migrations/202610300001_jubarte.sql`.
+2. Execute essa migração **uma única vez**, como proprietário, no SQL Editor do Supabase. Ela cria exclusivamente objetos com prefixo `jubarte_` no schema `public`, sem alterar dados, tabelas ou configurações de outros aplicativos. Não execute `supabase db reset` neste projeto compartilhado.
+3. Use um usuário de e-mail e senha já existente em **Authentication → Users**, ou crie-o pelo painel administrativo. Não há cadastro público na interface Jubarte. Não mude a configuração global de cadastros do projeto compartilhado.
+4. Copie o UUID desse usuário e autorize-o pelo SQL Editor:
+
+```sql
+insert into public.jubarte_members (user_id)
+values ('UUID-DO-USUARIO');
+```
+
+5. Preencha `.env.local` com `VITE_SUPABASE_URL` e `VITE_SUPABASE_PUBLISHABLE_KEY` (chave publishable ou anon). Nunca use service_role, senha do banco ou chave secret no frontend, no GitHub ou nas variáveis VITE.
+6. Em **Authentication → URL Configuration → Redirect URLs**, adicione `https://wsoubar.github.io/jubarte/` e, para desenvolvimento, `http://localhost:5173/jubarte/`. Preserve os endereços dos outros aplicativos. A recuperação informa explicitamente o destino; não é necessário trocar a Site URL global.
+7. Confirme a configuração de envio de e-mails/SMTP do Supabase e faça o teste de recuperação com uma conta real.
+
+A lista de membros é somente leitura para usuários autenticados e só permite ler o próprio registro. A inclusão de membros é administrativa. RLS protege todas as tabelas; referências compostas impedem associar contas/categorias de outro usuário. Transferência é uma única linha com origem e destino e, portanto, não pode ser gravada pela metade. Triggers também validam datas, tipos e uso de contas/categorias arquivadas.
+
+Para revogar acesso:
+
+```sql
+delete from public.jubarte_members where user_id = 'UUID-DO-USUARIO';
+```
+
+Isso revoga acesso aos dados do Jubarte sem remover o usuário compartilhado do Supabase ou interferir nos outros aplicativos.
+
+## Publicar no GitHub Pages
+
+1. Em **Settings → Pages → Build and deployment**, selecione **GitHub Actions**.
+2. Em **Settings → Secrets and variables → Actions → Variables**, crie:
+   - `VITE_SUPABASE_URL`
+   - `VITE_SUPABASE_PUBLISHABLE_KEY`
+3. Execute **Actions → Verify and deploy Jubarte → Run workflow**, ou faça push em `main`.
+4. O endereço esperado é **https://wsoubar.github.io/jubarte/**. O workflow verifica testes e build antes de publicar. Pull requests são verificados sem publicação.
+
+As duas variáveis são públicas e fazem parte do bundle do navegador. A privacidade depende de autenticação e RLS, não de esconder essa chave. Sem as variáveis, a publicação funciona apenas como demonstração. O repositório e os arquivos estáticos são públicos; os dados financeiros permanecem no Supabase e só são consultados após login autorizado.
+
+O projeto usa base `/jubarte/` e HashRouter (`#/relatorios`, por exemplo), compatíveis com recarregamento e links diretos no Pages. Para outro nome de repositório, ajuste `base` no Vite e os Redirect URLs.
+
+## Regras financeiras
+
+- Valores inteiros em centavos, exclusivamente BRL. Saldo inicial não negativo; limite por valor de R$ 1 bilhão.
+- Datas financeiras são datas de calendário, sem conversão de fuso. O dia atual considera America/Sao_Paulo.
+- Saldo realizado: saldo inicial + movimentações efetivadas até a data consultada. Uma conta ainda não iniciada tem saldo zero nessa data.
+- Saldo previsto: realizado mais pendências vencidas ou a vencer até a data consultada.
+- Receitas e despesas realizadas usam a **data de pagamento**; pendências usam **vencimento**. Uma movimentação já paga não é contada novamente como previsão.
+- Transferências não compõem receitas e despesas e preservam o saldo consolidado.
+- Categorias, busca e situação filtram lançamentos/totais do relatório. Os saldos e a curva de evolução sempre representam o histórico integral das contas selecionadas, inclusive arquivadas.
+- Alterar saldo/data inicial recalcula o histórico. A data inicial não pode ser posterior a movimentos existentes. Não há lançamento antes do início da conta nem pagamento no futuro.
+- Arquivar oculta contas e categorias dos novos lançamentos, preservando histórico e relatórios. Não há exclusão de contas/categorias pela interface.
+- PDFs são gerados no dispositivo, sem upload ou armazenamento no Supabase. O detalhe inclui a situação de cada lançamento e o comparativo usa valores efetivados.
+
+## Verificação de acesso real
+
+Após aplicar a migração, valide com usuários de teste:
+
+- Sem login: nenhuma tabela Jubarte pode ser lida ou alterada.
+- Autenticado sem registro em `jubarte_members`: RPC de autorização retorna falso; acesso bloqueado.
+- Usuário autorizado A: pode acessar apenas seus registros.
+- Usuário autorizado B: não pode ler, alterar ou relacionar contas, categorias e lançamentos de A.
+- Usuários autenticados não conseguem incluir membros na lista de autorização.
+- Recusa de categorias incompatíveis, valores inválidos, datas anteriores à conta e pagamento futuro, mesmo em chamadas diretas à API.
+
+Testes locais cobrem cálculos, autorização SQL e invariantes do banco. Login real, e-mail e RLS no projeto compartilhado devem ser confirmados após fornecer conexão e aplicar a migração.
+
+## Identidade visual
+
+`public/logo.png` é o símbolo original gerado para o Jubarte, com fundo transparente. A marca no aplicativo combina o símbolo com o nome Jubarte. O mesmo símbolo é usado como favicon e nos PDFs.
+
+## Fora desta versão
+
+Cartões/faturas, parcelas, recorrências, metas, orçamentos, investimentos, importação e Open Finance.
+
+O histórico anterior Java/Maven permanece no Git; a substituição usa commits normais, sem reescrever histórico. Para reverter uma publicação, reverta o commit correspondente e deixe o workflow publicar novamente.
