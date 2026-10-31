@@ -4,7 +4,7 @@ Responda e escreva documentação e textos da interface em português do Brasil.
 
 ## Projeto e estrutura
 
-O Jubarte é um aplicativo de controle financeiro pessoal com React 19, TypeScript estrito, Vite, Tailwind CSS 4 e Supabase. Preserve o tema claro, a identidade azul oceano/turquesa e a responsividade.
+O Jubarte é um aplicativo de controle financeiro pessoal com React 19, TypeScript estrito, Vite, Tailwind CSS 4 e Supabase. Preserve os temas claro e escuro, a identidade azul oceano/turquesa e a responsividade. A preferência de tema usa a chave `jubarte.theme` no navegador; dados financeiros não devem ser persistidos no `localStorage`.
 
 - `src/App.tsx`: navegação, páginas e integração da interface.
 - `src/finance.ts` e `src/types.ts`: cálculos financeiros e tipos do domínio.

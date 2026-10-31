@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { supabase } from "./supabase";
 import { Button } from "./components/ui/button";
+import { ThemeToggle } from "./theme";
 import { ArrowRight, ShieldCheck, Waves } from "lucide-react";
 export function Auth({
   onDemo,
@@ -49,6 +50,9 @@ export function Auth({
   }
   return (
     <main className="auth-page">
+      <div className="auth-theme-toggle">
+        <ThemeToggle />
+      </div>
       <section className="auth-story">
         <div className="brand">
           <img

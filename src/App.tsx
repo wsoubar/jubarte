@@ -39,6 +39,7 @@ import {
 } from "lucide-react";
 import { supabase } from "./supabase";
 import { Auth } from "./Auth";
+import { ThemePicker, ThemeToggle } from "./theme";
 import { loadLedger } from "./data";
 import { demoLedger } from "./demo";
 import {
@@ -396,6 +397,7 @@ function Workspace({
             <strong>{section}</strong>
           </div>
           <div className="topbar-right">
+            <ThemeToggle />
             <span className="private-badge">
               <ShieldCheck size={14} /> Ambiente pessoal
             </span>
@@ -1140,6 +1142,7 @@ function Workspace({
                   </div>
                   <h2>Seu espaço pessoal</h2>
                   <p>Um lugar seguro e organizado para suas finanças.</p>
+                  <ThemePicker />
                   <dl>
                     <div>
                       <dt>E-mail</dt>

@@ -1,6 +1,6 @@
 # Jubarte 🐋
 
-Controle financeiro pessoal em português do Brasil, com tema claro, React, Vite, TypeScript, Tailwind CSS, componentes baseados em shadcn/ui e Supabase. Identidade: azul oceano, turquesa e uma baleia jubarte saltando.
+Controle financeiro pessoal em português do Brasil, com temas claro e escuro, React, Vite, TypeScript, Tailwind CSS, componentes baseados em shadcn/ui e Supabase. Identidade: azul oceano, turquesa e uma baleia jubarte saltando.
 
 ## O que está incluído
 
@@ -111,6 +111,8 @@ Após aplicar a migração, valide com usuários de teste:
 Testes locais cobrem cálculos, autorização SQL e invariantes do banco. Login real, e-mail e RLS no projeto compartilhado devem ser confirmados após fornecer conexão e aplicar a migração.
 
 ## Identidade visual
+
+O tema claro é o padrão. Use o botão de sol/lua no topo (também disponível no login) ou **Configurações → Aparência → Claro/Escuro** para alternar. A preferência fica no `localStorage`, na chave `jubarte.theme`, e é aplicada antes da renderização para evitar um clarão ao recarregar. Ela vale para esse navegador, inclusive na demonstração, sem armazenar dados financeiros ou alterar o tema dos PDFs. Se o navegador bloquear armazenamento, a troca funciona durante a sessão, sem persistência ao recarregar.
 
 `public/logo.png` é o símbolo original gerado para o Jubarte, com fundo transparente. A marca no aplicativo combina o símbolo com o nome Jubarte. O mesmo símbolo é usado como favicon e nos PDFs.
 
