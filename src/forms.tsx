@@ -65,7 +65,9 @@ export function Editor({
       kind:
         type === "category"
           ? category?.kind || "expense"
-          : entry?.kind || "expense",
+          : entry?.kind === "income" || entry?.kind === "transfer"
+            ? entry.kind
+            : "expense",
       account:
         entry?.account_id || ledger.accounts.find((a) => !a.archived)?.id || "",
       destination: entry?.destination_id || "",

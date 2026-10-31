@@ -1,5 +1,5 @@
 import { useEffect, useState, type ReactNode } from "react";
-import { NavLink, useLocation } from "react-router-dom";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type { Session } from "@supabase/supabase-js";
 import {
@@ -40,6 +40,8 @@ import {
 import { supabase } from "./supabase";
 import { Auth } from "./Auth";
 import { ThemePicker, ThemeToggle } from "./theme";
+import { LoansPage } from "./LoansPage";
+import { loanPortfolio, withLoanEntries } from "./loans";
 import { loadLedger } from "./data";
 import { demoLedger } from "./demo";
 import {
@@ -77,6 +79,7 @@ const nav = [
   ["/lancamentos", "Lançamentos", ArrowLeftRight],
   ["/contas", "Minhas contas", Wallet],
   ["/categorias", "Categorias", Tags],
+  ["/devedores", "Devedores", Wallet],
   ["/relatorios", "Relatórios", ChartNoAxesCombined],
   ["/configuracoes", "Configurações", Settings],
 ] as const;
@@ -194,7 +197,8 @@ function Workspace({
     queryFn: loadLedger,
     enabled: !demo,
   });
-  const ledger = demo ? demoData : data || emptyLedger;
+  const ledger = withLoanEntries(demo ? demoData : data || emptyLedger);
+  const lending = loanPortfolio(ledger, today());
   const section =
     nav.find((n) => n[0] === location.pathname)?.[1] || "Visão geral";
   useEffect(() => {
@@ -228,7 +232,7 @@ function Workspace({
   const isDashboard = location.pathname === "/",
     isReports = location.pathname === "/relatorios";
   async function write(
-    type: "account" | "category" | "entry",
+    type: "account" | "category" | "entry" | "debtor" | "loan" | "receipt",
     values: Record<string, unknown>,
     id?: string,
     remove = false,
@@ -238,18 +242,26 @@ function Workspace({
         ? "accounts"
         : type === "category"
           ? "categories"
-          : "entries";
+          : type === "debtor"
+            ? "debtors"
+            : type === "loan"
+              ? "loans"
+              : type === "receipt"
+                ? "receipts"
+                : "entries";
     if (demo) {
       setDemoData(
         (prev) =>
           ({
             ...prev,
             [key]: remove
-              ? prev[key].filter((x) => x.id !== id)
+              ? (prev[key] || []).filter((x) => x.id !== id)
               : id
-                ? prev[key].map((x) => (x.id === id ? { ...x, ...values } : x))
+                ? (prev[key] || []).map((x) =>
+                    x.id === id ? { ...x, ...values } : x,
+                  )
                 : [
-                    ...prev[key],
+                    ...(prev[key] || []),
                     {
                       id: crypto.randomUUID(),
                       user_id: "demo",
@@ -264,15 +276,17 @@ function Workspace({
     const db = supabase!;
     const request = remove
       ? db
-          .from("jubarte_" + key)
+          .from("jubarte_" + (key === "receipts" ? "loan_receipts" : key))
           .delete()
           .eq("id", id!)
       : id
         ? db
-            .from("jubarte_" + key)
+            .from("jubarte_" + (key === "receipts" ? "loan_receipts" : key))
             .update(values)
             .eq("id", id)
-        : db.from("jubarte_" + key).insert({ ...values, user_id: userId });
+        : db
+            .from("jubarte_" + (key === "receipts" ? "loan_receipts" : key))
+            .insert({ ...values, user_id: userId });
     const { error } = await request;
     if (error) throw new Error(error.message);
     await client.invalidateQueries({ queryKey: ["ledger", userId] });
@@ -442,7 +456,9 @@ function Workspace({
                         ? "Seu dinheiro organizado, de uma conta a outra."
                         : location.pathname === "/categorias"
                           ? "Organize seus movimentos do seu jeito."
-                          : "Seu espaço, suas preferências."}
+                          : location.pathname === "/devedores"
+                            ? "Pessoas, acordos e recebimentos, com clareza."
+                            : "Seu espaço, suas preferências."}
               </p>
             </div>
             <div className="heading-actions">
@@ -460,7 +476,8 @@ function Workspace({
                   {working ? "Gerando…" : "Exportar PDF"}
                 </Button>
               ) : (
-                location.pathname !== "/configuracoes" && (
+                location.pathname !== "/configuracoes" &&
+                location.pathname !== "/devedores" && (
                   <Button
                     onClick={() =>
                       setEditor({
@@ -636,7 +653,9 @@ function Workspace({
               )}
               {(isDashboard || isReports) && (
                 <>
-                  <div className="stat-grid">
+                  <div
+                    className={"stat-grid" + (isDashboard ? " has-loans" : "")}
+                  >
                     <Stat
                       label="Saldo realizado"
                       value={real}
@@ -664,6 +683,20 @@ function Workspace({
                       icon={<TrendingUp size={20} />}
                       note="Inclui pendências até a data final"
                     />
+                    {isDashboard && (
+                      <NavLink
+                        to="/devedores"
+                        className="stat-loan-link"
+                        aria-label="Ver empréstimos a receber"
+                      >
+                        <Stat
+                          label="Emprestado a receber"
+                          value={lending.outstanding}
+                          icon={<ArrowUpRight size={20} />}
+                          note="Posição atual · empréstimos abertos"
+                        />
+                      </NavLink>
+                    )}
                   </div>
                   {isReports && (
                     <div className="notice report-note">
@@ -1135,6 +1168,17 @@ function Workspace({
                   </section>
                 </>
               )}
+              {location.pathname === "/devedores" && (
+                <LoansPage
+                  key={location.search}
+                  ledger={ledger}
+                  onWrite={write}
+                  focusLoanId={
+                    new URLSearchParams(location.search).get("emprestimo") ||
+                    undefined
+                  }
+                />
+              )}
               {location.pathname === "/configuracoes" && (
                 <section className="panel settings-panel">
                   <div className="settings-icon">
@@ -1402,6 +1446,11 @@ function EntryTable({
   onDelete?: (e: Entry) => void;
   onPay?: (e: Entry) => void;
 }) {
+  const navigate = useNavigate();
+  function edit(e: Entry) {
+    if (e.loan_id) navigate("/devedores?emprestimo=" + e.loan_id);
+    else onEdit(e);
+  }
   if (!rows.length)
     return (
       <Empty text="Nenhum lançamento por aqui. Adicione um ou ajuste o período." />
@@ -1431,7 +1480,7 @@ function EntryTable({
             return (
               <tr key={e.id}>
                 <td>
-                  <button className="entry-name" onClick={() => onEdit(e)}>
+                  <button className="entry-name" onClick={() => edit(e)}>
                     <span
                       className="category-icon"
                       style={{
@@ -1449,7 +1498,13 @@ function EntryTable({
                 </td>
                 <td>
                   <span className="table-category">
-                    {e.kind === "transfer" ? "Transferência" : c?.name || "—"}
+                    {e.kind === "transfer"
+                      ? "Transferência"
+                      : e.kind === "loan_out"
+                        ? "Empréstimo concedido"
+                        : e.kind === "loan_in"
+                          ? "Recebimento de empréstimo"
+                          : c?.name || "—"}
                     <small>
                       {ledger.accounts.find((a) => a.id === e.account_id)?.name}
                       {e.destination_id
@@ -1483,12 +1538,15 @@ function EntryTable({
                 </td>
                 <td
                   className={
-                    "amount right " + (e.kind === "income" ? "income" : "")
+                    "amount right " +
+                    (e.kind === "income" || e.kind === "loan_in"
+                      ? "income"
+                      : "")
                   }
                 >
-                  {e.kind === "income"
+                  {e.kind === "income" || e.kind === "loan_in"
                     ? "+ "
-                    : e.kind === "expense"
+                    : e.kind === "expense" || e.kind === "loan_out"
                       ? "− "
                       : ""}
                   {money(e.amount_cents)}
@@ -1505,13 +1563,15 @@ function EntryTable({
                       </button>
                     )}
                     <button
-                      title="Editar"
-                      aria-label={"Editar " + e.description}
-                      onClick={() => onEdit(e)}
+                      title={e.loan_id ? "Abrir empréstimo" : "Editar"}
+                      aria-label={
+                        (e.loan_id ? "Abrir " : "Editar ") + e.description
+                      }
+                      onClick={() => edit(e)}
                     >
                       <Pencil size={14} />
                     </button>
-                    {onDelete && (
+                    {onDelete && !e.loan_id && (
                       <button
                         title="Excluir"
                         aria-label={"Excluir " + e.description}

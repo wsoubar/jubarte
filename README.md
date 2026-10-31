@@ -9,6 +9,7 @@ Controle financeiro pessoal em português do Brasil, com temas claro e escuro, R
 - Pagamentos e pendências, saldo realizado e projetado, filtros e paginação.
 - Dashboard, comparativos mensais e relatórios PDF com gráficos e detalhamento.
 - Layout responsivo e demonstração em memória, separada dos dados reais.
+- Devedores (pessoas/empresas), empréstimos, recebimentos livres e fechamento manual, integrados aos saldos das contas.
 
 ## Executar
 
@@ -34,7 +35,7 @@ Os testes de navegador usam Chromium em `/usr/bin/chromium` localmente; no CI, i
 ## Configurar Supabase compartilhado
 
 1. Faça um backup do projeto e revise a migração `supabase/migrations/202610300001_jubarte.sql`.
-2. Execute essa migração **uma única vez**, como proprietário, no SQL Editor do Supabase. Ela cria exclusivamente objetos com prefixo `jubarte_` no schema `public`, sem alterar dados, tabelas ou configurações de outros aplicativos. Não execute `supabase db reset` neste projeto compartilhado.
+2. Execute essa migração **uma única vez**, como proprietário, no SQL Editor do Supabase. Em seguida, execute também `supabase/migrations/202610310001_jubarte_loans.sql`, uma única vez. Elas usam exclusivamente objetos com prefixo `jubarte_` no schema `public`, sem alterar dados, tabelas ou configurações de outros aplicativos. Não execute `supabase db reset` neste projeto compartilhado.
 3. Use um usuário de e-mail e senha já existente em **Authentication → Users**, ou crie-o pelo painel administrativo. Não há cadastro público na interface Jubarte. Não mude a configuração global de cadastros do projeto compartilhado.
 4. Copie o UUID desse usuário e autorize-o pelo SQL Editor:
 
@@ -71,6 +72,25 @@ O script apenas insere dados nas tabelas existentes; não execute novamente a mi
 
 O cadastro é opcional e manual, sem execução automática ao iniciar o aplicativo. Para outro usuário, repita com o UUID correspondente. O script preserva categorias existentes e insere apenas as que não possuem o mesmo nome e tipo para o usuário escolhido. Categorias arquivadas também contam como existentes e não são reativadas. É possível repetir a execução sequencialmente sem duplicar essas categorias; evite execuções simultâneas. A demonstração continua usando suas próprias categorias em memória.
 
+## Devedores e empréstimos
+
+**Atualização de uma instalação existente:** faça backup e execute somente a nova migração [202610310001_jubarte_loans.sql](supabase/migrations/202610310001_jubarte_loans.sql), como proprietário no **SQL Editor do mesmo Supabase**, uma única vez. Não repita a migração inicial nem recrie as tabelas existentes. A nova migração cria `jubarte_debtors`, `jubarte_loans` e `jubarte_loan_receipts`, com RLS e referências por usuário, e adiciona uma validação às contas para proteger as datas de empréstimos/recebimentos. Os usuários já autorizados em `jubarte_members` continuam autorizados. Aplique antes de publicar esta versão e recarregue a aplicação após concluir.
+
+Em **Devedores**, cadastre a pessoa ou empresa, telefone e observações opcionais. Selecione o devedor e use **Novo empréstimo** para informar valor, data da saída, conta de saída, vencimento opcional e observações. Cada devedor pode ter vários empréstimos. Use **Registrar recebimento** para informar valor, data e conta de entrada: cada recebimento pode ir para uma conta diferente da saída e dos demais recebimentos.
+
+Na **Visão geral**, o card **Emprestado a receber**, ao lado dos demais indicadores, mostra o saldo atual a receber dos empréstimos abertos. Ele considera todo o histórico, independentemente do período selecionado, e leva à área **Devedores** ao clicar. Fechados e excedentes não compensam pendências de outros empréstimos. O detalhamento completo permanece em **Devedores**.
+
+- Não há cálculo de juros nem calendário automático de parcelas. São permitidos recebimentos parciais e valores excedentes: R$ 100 emprestados e duas entradas de R$ 60 resultam em R$ 120 recebidos e R$ 20 recebidos a mais.
+- O fechamento é sempre manual, pela ação **Fechar empréstimo**, com data e observação opcionais. Pode ocorrer com qualquer valor recebido e não cria ajustes financeiros. Um empréstimo integralmente recebido permanece aberto até você fechá-lo.
+- Empréstimos fechados com diferença mostram o valor **não recuperado**, separado do **a receber dos abertos**. O saldo a receber nunca fica negativo; excedentes aparecem como **recebido a mais**, sem compensar pendências de outros empréstimos. Vencimentos atrasados só sinalizam acordos abertos com valor pendente.
+- **Reabrir empréstimo** permite corrigir ou adicionar recebimentos. Para alterar um empréstimo fechado ou seus recebimentos, reabra primeiro. A reabertura limpa a data e observação do fechamento atual, preservando as movimentações financeiras; não há trilha de auditoria de fechamentos anteriores.
+- Edições e exclusões recalculam os saldos. Para excluir um empréstimo, exclua antes seus recebimentos; há confirmação nas exclusões. Arquivar o devedor preserva o histórico e permite continuar os recebimentos de acordos abertos, mas impede novos empréstimos até restaurá-lo.
+- Saídas e recebimentos não podem estar no futuro ou antes do saldo inicial da conta; recebimentos não podem ser anteriores ao empréstimo. Contas arquivadas preservam o histórico, mas não podem ser escolhidas para novas movimentações.
+- As movimentações são derivadas dos registros, sem duplicação em `jubarte_entries`. Aparecem identificadas no histórico, nos saldos, na evolução financeira e no PDF, separadas das receitas/despesas comuns. Vencimentos de empréstimos não criam previsões automáticas de entrada nas contas. Clique na movimentação para abrir o empréstimo correspondente.
+- Busca por devedor, inclusão de arquivados e filtros de empréstimos abertos, fechados e atrasados estão disponíveis. Os totais do módulo consideram todo o histórico, independentemente dos filtros da listagem. A demonstração permite explorar os fluxos em memória, sem salvar dados reais.
+
+Os testes locais validam cálculos, alterações de saldo, RLS e invariantes PostgreSQL com PGlite e fluxos de navegador com Playwright. A migração e o isolamento no Supabase remoto precisam ser confirmados após a aplicação administrativa.
+
 ## Publicar no GitHub Pages
 
 1. Em **Settings → Pages → Build and deployment**, selecione **GitHub Actions**.
@@ -92,6 +112,7 @@ O projeto usa base `/jubarte/` e HashRouter (`#/relatorios`, por exemplo), compa
 - Saldo previsto: realizado mais pendências vencidas ou a vencer até a data consultada.
 - Receitas e despesas realizadas usam a **data de pagamento**; pendências usam **vencimento**. Uma movimentação já paga não é contada novamente como previsão.
 - Transferências não compõem receitas e despesas e preservam o saldo consolidado.
+- Empréstimos e recebimentos afetam os saldos, mas não compõem receitas e despesas comuns. O fechamento manual não altera o saldo das contas.
 - Categorias, busca e situação filtram lançamentos/totais do relatório. Os saldos e a curva de evolução sempre representam o histórico integral das contas selecionadas, inclusive arquivadas.
 - Alterar saldo/data inicial recalcula o histórico. A data inicial não pode ser posterior a movimentos existentes. Não há lançamento antes do início da conta nem pagamento no futuro.
 - Arquivar oculta contas e categorias dos novos lançamentos, preservando histórico e relatórios. Não há exclusão de contas/categorias pela interface.

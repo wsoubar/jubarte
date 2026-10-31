@@ -44,7 +44,8 @@ export function effect(entry: Entry, accountId: string) {
         ? entry.amount_cents
         : 0;
   return entry.account_id === accountId
-    ? (entry.kind === "income" ? 1 : -1) * entry.amount_cents
+    ? (entry.kind === "income" || entry.kind === "loan_in" ? 1 : -1) *
+        entry.amount_cents
     : 0;
 }
 export function balance(
@@ -89,7 +90,8 @@ export function selectEntries(entries: Entry[], f: Filters) {
 export function totals(entries: Entry[]) {
   return entries.reduce(
     (r, e) => {
-      if (e.paid_date && e.kind !== "transfer") r[e.kind] += e.amount_cents;
+      if (e.paid_date && (e.kind === "income" || e.kind === "expense"))
+        r[e.kind] += e.amount_cents;
       return r;
     },
     { income: 0, expense: 0 },

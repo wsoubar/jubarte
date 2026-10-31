@@ -11,6 +11,7 @@ O Jubarte é um aplicativo de controle financeiro pessoal com React 19, TypeScri
 - `src/Auth.tsx`, `src/supabase.ts` e `src/data.ts`: autenticação, cliente e consultas.
 - `src/forms.tsx`, `src/components/ui/` e `src/styles.css`: formulários, componentes reutilizáveis e estilos.
 - `src/demo.ts`: demonstração fictícia em memória; `src/report.tsx`: geração local de PDFs.
+- `src/LoansPage.tsx` e `src/loans.ts`: devedores, empréstimos, recebimentos e movimentações derivadas. Não duplique essas movimentações em `jubarte_entries`; feche empréstimos somente por ação manual, sem ajustes de saldo. Preserve recebimentos superiores ao valor emprestado e contas distintas para saída/entradas.
 - `src/*.test.ts`: testes de cálculos e banco com Vitest/PGlite; `e2e/`: testes Playwright.
 - `supabase/migrations/`: SQL; `.github/workflows/`: verificação e publicação no GitHub Pages.
 

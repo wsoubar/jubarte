@@ -10,6 +10,7 @@ import {
   Rect,
 } from "@react-pdf/renderer";
 import type { Filters, Ledger } from "./types";
+import { withLoanEntries } from "./loans";
 import {
   balance,
   categoryTotals,
@@ -74,7 +75,7 @@ const s = StyleSheet.create({
   note: { marginTop: 12, fontSize: 8, color: "#6d7e8f", lineHeight: 1.5 },
 });
 export function Report({
-  ledger,
+  ledger: sourceLedger,
   filters,
   generatedAt,
 }: {
@@ -82,6 +83,7 @@ export function Report({
   filters: Filters;
   generatedAt: string;
 }) {
+  const ledger = withLoanEntries(sourceLedger);
   const entries = selectEntries(ledger.entries, filters),
     t = totals(entries),
     accounts = ledger.accounts.filter(
@@ -139,9 +141,10 @@ export function Report({
         </View>
         <Text style={s.note}>
           Valores realizados usam a data de pagamento; pendências usam o
-          vencimento. Transferências não entram em receitas e despesas. Saldos
-          incluem todo o histórico das contas selecionadas até a data final,
-          independentemente dos filtros de categoria, situação e busca.
+          vencimento. Transferências, empréstimos e seus recebimentos não entram
+          em receitas e despesas. Saldos incluem todo o histórico das contas
+          selecionadas até a data final, independentemente dos filtros de
+          categoria, situação e busca.
         </Text>
         <Text style={s.section}>Despesas por categoria</Text>
         {!cats.length && (
@@ -243,7 +246,12 @@ export function Report({
               <Text style={s.muted}>
                 {e.kind === "transfer"
                   ? "Transferência"
-                  : ledger.categories.find((c) => c.id === e.category_id)?.name}
+                  : e.kind === "loan_out"
+                    ? "Empréstimo concedido"
+                    : e.kind === "loan_in"
+                      ? "Recebimento de empréstimo"
+                      : ledger.categories.find((c) => c.id === e.category_id)
+                          ?.name}
               </Text>
               {e.notes && <Text style={s.muted}>{e.notes}</Text>}
             </View>
@@ -259,7 +267,11 @@ export function Report({
               {e.paid_date ? "Efetivado" : "Pendente"}
             </Text>
             <Text style={s.small}>
-              {e.kind === "expense" ? "- " : e.kind === "income" ? "+ " : ""}
+              {e.kind === "expense" || e.kind === "loan_out"
+                ? "- "
+                : e.kind === "income" || e.kind === "loan_in"
+                  ? "+ "
+                  : ""}
               {money(e.amount_cents)}
             </Text>
           </View>

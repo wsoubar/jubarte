@@ -1999,3 +1999,280 @@ textarea {
   box-shadow: inset 0 0 0 1px var(--accent-text, #267d8b);
   color: var(--accent-text, #184c70);
 }
+
+.loan-overview {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 20px;
+}
+/* O resumo de empréstimos compartilha a mesma linha dos demais indicadores. */
+.stat-grid.has-loans {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+.stat-loan-link {
+  display: block;
+  min-width: 0;
+  border-radius: 12px;
+}
+.stat-loan-link .stat-card {
+  height: 100%;
+}
+.stat-loan-link:hover .stat-card {
+  border-color: var(--accent-text, #58bfc7);
+}
+@media (max-width: 1250px) {
+  .stat-grid.has-loans {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+@media (max-width: 1000px) {
+  .stat-grid.has-loans {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+.loan-metric {
+  padding: 20px 16px;
+}
+.loan-metric span {
+  display: block;
+  font-size: 11px;
+  color: var(--text-muted, #627c90);
+}
+.loan-metric strong {
+  display: block;
+  font-size: 21px;
+  margin-top: 12px;
+  letter-spacing: -0.5px;
+  overflow-wrap: anywhere;
+}
+.debtors-layout {
+  display: grid;
+  grid-template-columns: minmax(230px, 0.8fr) minmax(0, 2fr);
+  gap: 22px;
+  align-items: start;
+}
+.debtors-list {
+  padding-bottom: 14px;
+}
+.debtor-search {
+  padding: 8px 20px 16px;
+}
+.debtor-search label {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  font-size: 12px;
+  color: var(--text, #627c90);
+}
+.debtor-search .loan-check {
+  flex-direction: row;
+  align-items: center;
+  margin-top: 15px;
+  font-size: 11px;
+}
+.debtor-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: calc(100% - 24px);
+  margin: 4px 12px;
+  padding: 14px 12px;
+  text-align: left;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  color: inherit;
+}
+.debtor-option.selected {
+  background: var(--surface-soft, #eaf3f7);
+  border-color: var(--border, #c8e1e6);
+}
+.debtor-option svg {
+  flex-shrink: 0;
+  color: var(--accent-text, #267d8b);
+}
+.debtor-option strong {
+  display: block;
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+.debtor-option small {
+  display: block;
+  color: var(--text-muted, #627c90);
+  line-height: 1.7;
+  margin-top: 3px;
+}
+.debtor-detail {
+  min-width: 0;
+}
+.debtor-profile {
+  padding: 24px;
+}
+.debtor-profile h2 {
+  font-size: 23px;
+  margin: 8px 0;
+  overflow-wrap: anywhere;
+}
+.debtor-profile p {
+  font-size: 12px;
+  color: var(--text, #627c90);
+}
+.loan-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+.debtor-profile > .loan-actions {
+  margin-top: 22px;
+}
+.loan-actions .btn {
+  font-size: 11px;
+  padding: 8px 10px;
+  white-space: normal;
+}
+.loan-actions button:disabled {
+  cursor: default;
+}
+.loan-list-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin: 26px 0 16px;
+}
+.loan-list-heading h2 {
+  overflow-wrap: anywhere;
+  min-width: 0;
+}
+.loan-list-heading select {
+  max-width: 130px;
+}
+.loan-card {
+  padding: 24px;
+  margin-bottom: 18px;
+}
+.loan-card-heading {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.loan-card h3 {
+  font-size: 27px;
+  letter-spacing: -0.6px;
+  margin: 12px 0 8px;
+}
+.loan-card-heading p {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  color: var(--text, #627c90);
+}
+.loan-notes {
+  font-size: 12px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  margin-top: 10px;
+  color: var(--text, #627c90);
+}
+.loan-values {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  border-top: 1px solid var(--border, #e5ebf0);
+  padding: 20px 0 6px;
+  margin: 20px 0;
+}
+.loan-values dt {
+  font-size: 11px;
+  color: var(--text-muted, #627c90);
+}
+.loan-values dd {
+  margin: 8px 0 0;
+  font-size: 18px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.loan-card .notice {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.loan-card h4 {
+  margin: 0 0 16px;
+  font-size: 13px;
+  font-weight: 600;
+}
+.loan-receipts {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.loan-receipts li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 0;
+  border-top: 1px solid var(--border, #e5ebf0);
+}
+.loan-receipts li > svg {
+  color: var(--accent-text, #267d8b);
+  flex-shrink: 0;
+}
+.loan-receipts li > div:first-of-type {
+  flex: 1;
+  min-width: 0;
+}
+.loan-receipts strong {
+  font-size: 14px;
+}
+.loan-receipts small {
+  display: block;
+  margin-top: 6px;
+  line-height: 1.7;
+  color: var(--text-muted, #627c90);
+}
+@media (max-width: 1250px) {
+  .loan-overview {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .debtors-layout {
+    grid-template-columns: minmax(200px, 0.8fr) minmax(0, 2fr);
+    gap: 16px;
+  }
+}
+@media (max-width: 1000px) {
+  .debtors-layout {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 760px) {
+  .loan-overview {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .loan-metric {
+    padding: 16px;
+  }
+  .loan-metric strong {
+    font-size: 20px;
+  }
+  .loan-card,
+  .debtor-profile {
+    padding: 20px;
+  }
+  .loan-values {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  .loan-values > div {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+  }
+  .loan-values dd {
+    margin: 0;
+    font-size: 16px;
+  }
+}

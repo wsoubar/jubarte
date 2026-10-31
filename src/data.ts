@@ -16,15 +16,32 @@ export async function loadLedger(): Promise<Ledger> {
         .select("*")
         .order("id")
         .range(offset, offset + 999);
-      if (error) throw error;
+      if (error) {
+        if (
+          ["PGRST205", "42P01"].includes(error.code) &&
+          [
+            "jubarte_debtors",
+            "jubarte_loans",
+            "jubarte_loan_receipts",
+          ].includes(table)
+        )
+          throw new Error(
+            "Aplique a migração 202610310001_jubarte_loans.sql no SQL Editor do Supabase para habilitar os empréstimos.",
+          );
+        throw error;
+      }
       rows.push(...data);
       if (data.length < 1000) return rows;
     }
   }
-  const [accounts, categories, entries] = await Promise.all([
-    all("jubarte_accounts"),
-    all("jubarte_categories"),
-    all("jubarte_entries"),
-  ]);
-  return { accounts, categories, entries } as Ledger;
+  const [accounts, categories, entries, debtors, loans, receipts] =
+    await Promise.all([
+      all("jubarte_accounts"),
+      all("jubarte_categories"),
+      all("jubarte_entries"),
+      all("jubarte_debtors"),
+      all("jubarte_loans"),
+      all("jubarte_loan_receipts"),
+    ]);
+  return { accounts, categories, entries, debtors, loans, receipts } as Ledger;
 }
