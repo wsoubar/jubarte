@@ -57,6 +57,20 @@ delete from public.jubarte_members where user_id = 'UUID-DO-USUARIO';
 
 Isso revoga acesso aos dados do Jubarte sem remover o usuário compartilhado do Supabase ou interferir nos outros aplicativos.
 
+### Categorias iniciais por usuário
+
+O arquivo [supabase/seeds/categorias_iniciais.sql](supabase/seeds/categorias_iniciais.sql) permite cadastrar categorias prontas para um usuário: Salário e Outras receitas; Moradia, Alimentação, Transporte, Saúde, Educação, Lazer e Outras despesas.
+
+1. Aplique a migração e autorize o usuário em `jubarte_members`, conforme os passos acima.
+2. Em **Authentication → Users**, copie o UUID do usuário que receberá as categorias.
+3. Abra o arquivo SQL e preencha `usuario_uid text := 'SEU-UID';` com o UUID copiado, mantendo as aspas.
+4. Execute o conteúdo completo no **SQL Editor** do mesmo projeto Supabase, como proprietário.
+5. Recarregue a aplicação para visualizar as categorias.
+
+O script apenas insere dados nas tabelas existentes; não execute novamente a migração para cadastrar categorias. Ele valida se o UID foi preenchido e se o usuário está autorizado em `jubarte_members`; ao concluir, emite uma mensagem `NOTICE` com a quantidade inserida.
+
+O cadastro é opcional e manual, sem execução automática ao iniciar o aplicativo. Para outro usuário, repita com o UUID correspondente. O script preserva categorias existentes e insere apenas as que não possuem o mesmo nome e tipo para o usuário escolhido. Categorias arquivadas também contam como existentes e não são reativadas. É possível repetir a execução sequencialmente sem duplicar essas categorias; evite execuções simultâneas. A demonstração continua usando suas próprias categorias em memória.
+
 ## Publicar no GitHub Pages
 
 1. Em **Settings → Pages → Build and deployment**, selecione **GitHub Actions**.
