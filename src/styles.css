@@ -6,11 +6,16 @@
   color-scheme: light;
   font-family: Inter, "Segoe UI", sans-serif;
   color: var(--text-strong, #263b50);
-  background: var(--surface-soft, #f7f9fc);
+  background: var(--surface-soft, #e4ebf1);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   font-size: 14px;
+}
+:root:not([data-theme="dark"]) {
+  --surface: #f0f3f6;
+  --border: #d3dee6;
+  --text-muted: #708294;
 }
 * {
   box-sizing: border-box;
@@ -311,7 +316,7 @@ small {
 .topbar {
   height: 73px;
   border-bottom: 1px solid var(--border, #e9edf2);
-  background: #ffffffb8;
+  background: var(--surface, #ffffffb8);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -463,16 +468,16 @@ small {
   border-color: transparent;
 }
 .stat-card.primary .stat-top {
-  color: var(--text-muted, #c5d9e3);
+  color: #c5d9e3;
 }
 .stat-card.primary .stat-icon {
-  color: var(--text-muted, #a3c8d7);
+  color: #a3c8d7;
 }
 .stat-card.primary > strong {
   color: #fff;
 }
 .stat-card.primary > small {
-  color: var(--text-muted, #adceda);
+  color: #adceda;
 }
 .stat-dot {
   height: 5px;
