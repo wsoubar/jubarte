@@ -92,9 +92,14 @@ const iconMap: Record<string, typeof Wallet> = {
   heart: Heart,
   book: BookOpen,
 };
-function Brand() {
+function Brand({ onNavigate }: { onNavigate: () => void }) {
   return (
-    <div className="brand">
+    <NavLink
+      to="/"
+      className="brand"
+      aria-label="Jubarte · Visão geral"
+      onClick={onNavigate}
+    >
       <img
         src={import.meta.env.BASE_URL + "logo.png"}
         alt="Baleia jubarte saltando"
@@ -102,7 +107,7 @@ function Brand() {
       <span>
         jubarte<span className="brand-dot">.</span>
       </span>
-    </div>
+    </NavLink>
   );
 }
 const emptyLedger: Ledger = { accounts: [], categories: [], entries: [] };
@@ -352,7 +357,7 @@ function Workspace({
     <div className="app-shell">
       <aside className={"sidebar " + (openNav ? "is-open" : "")}>
         <div className="sidebar-brand">
-          <Brand />
+          <Brand onNavigate={() => setOpenNav(false)} />
           <button
             className="mobile-only btn btn-ghost"
             aria-label="Fechar menu"
