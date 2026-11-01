@@ -60,6 +60,8 @@ Isso revoga acesso aos dados do Jubarte sem remover o usuário compartilhado do 
 
 ### Categorias iniciais por usuário
 
+Na tela **Categorias**, use a busca por nome (com ou sem acentos) e combine os filtros de **Receitas/Despesas** e **Ativas/Arquivadas**. A contagem mostra os resultados encontrados; **Limpar filtros** restaura a listagem completa. Esses filtros não alteram os filtros de lançamentos e relatórios.
+
 O arquivo [supabase/seeds/categorias_iniciais.sql](supabase/seeds/categorias_iniciais.sql) permite cadastrar categorias prontas para um usuário: Salário e Outras receitas; Moradia, Alimentação, Transporte, Saúde, Educação, Lazer e Outras despesas.
 
 1. Aplique a migração e autorize o usuário em `jubarte_members`, conforme os passos acima.
@@ -71,6 +73,12 @@ O arquivo [supabase/seeds/categorias_iniciais.sql](supabase/seeds/categorias_ini
 O script apenas insere dados nas tabelas existentes; não execute novamente a migração para cadastrar categorias. Ele valida se o UID foi preenchido e se o usuário está autorizado em `jubarte_members`; ao concluir, emite uma mensagem `NOTICE` com a quantidade inserida.
 
 O cadastro é opcional e manual, sem execução automática ao iniciar o aplicativo. Para outro usuário, repita com o UUID correspondente. O script preserva categorias existentes e insere apenas as que não possuem o mesmo nome e tipo para o usuário escolhido. Categorias arquivadas também contam como existentes e não são reativadas. É possível repetir a execução sequencialmente sem duplicar essas categorias; evite execuções simultâneas. A demonstração continua usando suas próprias categorias em memória.
+
+### Categorias adicionais de receitas
+
+Use [supabase/seeds/categorias_receitas.sql](supabase/seeds/categorias_receitas.sql) para cadastrar somente categorias de **Receita**: Salário, Pró-labore, Serviços e trabalhos extras, Vendas, Aluguéis, Rendimentos, Dividendos, Aposentadoria e pensão, Bônus e comissões, Presentes e doações, Reembolsos e Outras receitas.
+
+No arquivo, substitua o valor em `usuario_uid text := 'SEU-UID';` pelo UUID do usuário autorizado e execute o conteúdo completo no **SQL Editor do Supabase**, como proprietário. Depois, recarregue o aplicativo. O script não exige repetir as migrações ou executar o seed inicial; preserva categorias e despesas existentes, não reativa arquivadas e não duplica receitas de mesmo nome para o usuário em execuções sequenciais. Pode ser usado mesmo que você já tenha executado `categorias_iniciais.sql`. Os recebimentos de empréstimos continuam no módulo **Devedores**, separados dessas receitas.
 
 ## Devedores e empréstimos
 

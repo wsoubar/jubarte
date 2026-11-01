@@ -47,7 +47,7 @@ button {
   cursor: pointer;
 }
 button:disabled {
-  cursor: wait;
+  cursor: default;
   opacity: 0.55;
 }
 a {
@@ -2238,7 +2238,68 @@ textarea {
   line-height: 1.7;
   color: var(--text-muted, #627c90);
 }
+.resource-grid.category-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+.category-filters {
+  margin-bottom: 10px;
+}
+.category-filter-count {
+  margin-bottom: 16px;
+  font-size: 11px;
+  color: var(--text-muted, #708294);
+}
+.category-empty {
+  grid-column: 1 / -1;
+}
+.category-grid .category-card {
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr);
+  align-content: start;
+  column-gap: 10px;
+  row-gap: 6px;
+  padding: 12px;
+}
+.category-grid .category-card > .category-icon {
+  grid-row: 1 / 3;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+}
+.category-grid .category-icon svg {
+  width: 18px;
+  height: 18px;
+}
+.category-grid .category-card > h2 {
+  margin: 0;
+  font-size: 13px;
+  line-height: 18px;
+  overflow-wrap: anywhere;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+.category-grid .category-card > .pill {
+  justify-self: start;
+  padding: 3px 6px;
+  line-height: 14px;
+}
+.category-grid .resource-actions {
+  grid-column: 1 / -1;
+  margin-top: 2px;
+  padding-top: 6px;
+}
+.category-grid .resource-actions .btn {
+  min-height: 28px;
+  padding: 4px 6px;
+  gap: 5px;
+}
 @media (max-width: 1250px) {
+  .resource-grid.category-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
   .loan-overview {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
@@ -2248,7 +2309,15 @@ textarea {
   }
 }
 @media (max-width: 1000px) {
+  .resource-grid.category-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
   .debtors-layout {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 520px) {
+  .resource-grid.category-grid {
     grid-template-columns: 1fr;
   }
 }

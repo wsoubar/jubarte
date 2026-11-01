@@ -192,6 +192,11 @@ function Workspace({
     search: "",
   });
   const [page, setPage] = useState(1);
+  const [categoryFilters, setCategoryFilters] = useState({
+    search: "",
+    kind: "",
+    status: "",
+  });
   const { data, error, isPending, refetch } = useQuery({
     queryKey: ["ledger", userId],
     queryFn: loadLedger,
@@ -199,6 +204,20 @@ function Workspace({
   });
   const ledger = withLoanEntries(demo ? demoData : data || emptyLedger);
   const lending = loanPortfolio(ledger, today());
+  const normalizeCategory = (value: string) =>
+    value
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLocaleLowerCase("pt-BR");
+  const visibleCategories = ledger.categories.filter(
+    (category) =>
+      normalizeCategory(category.name).includes(
+        normalizeCategory(categoryFilters.search.trim()),
+      ) &&
+      (!categoryFilters.kind || category.kind === categoryFilters.kind) &&
+      (!categoryFilters.status ||
+        category.archived === (categoryFilters.status === "archived")),
+  );
   const section =
     nav.find((n) => n[0] === location.pathname)?.[1] || "Visão geral";
   useEffect(() => {
@@ -1002,67 +1021,146 @@ function Workspace({
                 </>
               )}
               {location.pathname === "/categorias" && (
-                <div className="resource-grid">
-                  {ledger.categories.map((c) => {
-                    const Icon = iconMap[c.icon] || Tags;
-                    return (
-                      <section
-                        className={
-                          "panel category-card " +
-                          (c.archived ? "archived" : "")
+                <>
+                  <div
+                    className="filter-bar category-filters"
+                    role="search"
+                    aria-label="Filtrar categorias"
+                  >
+                    <div className="search-box">
+                      <Search size={17} />
+                      <input
+                        type="search"
+                        aria-label="Buscar categorias"
+                        placeholder="Buscar categoria…"
+                        value={categoryFilters.search}
+                        onChange={(e) =>
+                          setCategoryFilters((previous) => ({
+                            ...previous,
+                            search: e.target.value,
+                          }))
                         }
-                        key={c.id}
-                      >
-                        <span
-                          className="category-icon"
-                          style={{ color: c.color, background: c.color + "18" }}
-                        >
-                          <Icon size={23} />
-                        </span>
-                        <h2>{c.name}</h2>
-                        <span
+                      />
+                    </div>
+                    <select
+                      aria-label="Tipo de categoria"
+                      value={categoryFilters.kind}
+                      onChange={(e) =>
+                        setCategoryFilters((previous) => ({
+                          ...previous,
+                          kind: e.target.value,
+                        }))
+                      }
+                    >
+                      <option value="">Todos os tipos</option>
+                      <option value="income">Receitas</option>
+                      <option value="expense">Despesas</option>
+                    </select>
+                    <select
+                      aria-label="Situação das categorias"
+                      value={categoryFilters.status}
+                      onChange={(e) =>
+                        setCategoryFilters((previous) => ({
+                          ...previous,
+                          status: e.target.value,
+                        }))
+                      }
+                    >
+                      <option value="">Todas as situações</option>
+                      <option value="active">Ativas</option>
+                      <option value="archived">Arquivadas</option>
+                    </select>
+                    <Button
+                      variant="outline"
+                      aria-label="Limpar filtros de categorias"
+                      disabled={
+                        !categoryFilters.search &&
+                        !categoryFilters.kind &&
+                        !categoryFilters.status
+                      }
+                      onClick={() =>
+                        setCategoryFilters({ search: "", kind: "", status: "" })
+                      }
+                    >
+                      <SlidersHorizontal size={15} /> Limpar filtros
+                    </Button>
+                  </div>
+                  <p className="category-filter-count" role="status">
+                    {visibleCategories.length} de {ledger.categories.length}{" "}
+                    categoria(s)
+                  </p>
+                  <div className="resource-grid category-grid">
+                    {visibleCategories.map((c) => {
+                      const Icon = iconMap[c.icon] || Tags;
+                      return (
+                        <section
                           className={
-                            "pill " + (c.kind === "income" ? "paid" : "pending")
+                            "panel category-card " +
+                            (c.archived ? "archived" : "")
                           }
+                          key={c.id}
                         >
-                          {c.kind === "income" ? "Receita" : "Despesa"}
-                          {c.archived ? " · Arquivada" : ""}
-                        </span>
-                        <div className="resource-actions">
-                          <Button
-                            variant="ghost"
-                            onClick={() =>
-                              setEditor({ type: "category", item: c })
+                          <span
+                            className="category-icon"
+                            style={{
+                              color: c.color,
+                              background: c.color + "18",
+                            }}
+                          >
+                            <Icon size={23} />
+                          </span>
+                          <h2 title={c.name}>{c.name}</h2>
+                          <span
+                            className={
+                              "pill " +
+                              (c.kind === "income" ? "paid" : "pending")
                             }
                           >
-                            <Pencil size={15} />
-                            Editar
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            onClick={() =>
-                              void action(() =>
-                                write(
-                                  "category",
-                                  { archived: !c.archived },
-                                  c.id,
-                                ),
-                              )
-                            }
-                          >
-                            <Archive size={15} />
-                            {c.archived ? "Restaurar" : "Arquivar"}
-                          </Button>
-                        </div>
+                            {c.kind === "income" ? "Receita" : "Despesa"}
+                            {c.archived ? " · Arquivada" : ""}
+                          </span>
+                          <div className="resource-actions">
+                            <Button
+                              variant="ghost"
+                              onClick={() =>
+                                setEditor({ type: "category", item: c })
+                              }
+                            >
+                              <Pencil size={15} />
+                              Editar
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              onClick={() =>
+                                void action(() =>
+                                  write(
+                                    "category",
+                                    { archived: !c.archived },
+                                    c.id,
+                                  ),
+                                )
+                              }
+                            >
+                              <Archive size={15} />
+                              {c.archived ? "Restaurar" : "Arquivar"}
+                            </Button>
+                          </div>
+                        </section>
+                      );
+                    })}
+                    {!visibleCategories.length && (
+                      <section className="panel category-empty">
+                        <Empty
+                          text={
+                            ledger.categories.length
+                              ? "Nenhuma categoria encontrada. Ajuste ou limpe os filtros para ver outras categorias."
+                              : "Cadastre categorias como Salário, Moradia e Alimentação."
+                          }
+                        />
                       </section>
-                    );
-                  })}
-                  {!ledger.categories.length && (
-                    <section className="panel">
-                      <Empty text="Cadastre categorias como Salário, Moradia e Alimentação." />
-                    </section>
-                  )}
-                </div>
+                    )}
+                  </div>
+                </>
               )}
               {isReports && (
                 <>
