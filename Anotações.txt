@@ -1,0 +1,2 @@
+Implementar login
+Dar opção do novo usuário carregar as categorias pré configuradas
