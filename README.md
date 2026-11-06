@@ -32,7 +32,13 @@ npm run preview
 
 Os testes de navegador usam Chromium em `/usr/bin/chromium` localmente; no CI, instalam o navegador do Playwright. Para outro sistema, ajuste `executablePath` em `playwright.config.ts`.
 
-## Configurar Supabase compartilhado
+## Supabase independente — configuração local atual
+
+A instalação local foi migrada para o projeto dedicado **jubarte** (`omduuwlmkyfdupzgqtpq`). `.env.local` contém a URL e a chave pública do destino. O login é independente, com credenciais guardadas localmente em `.migration-private/login.json`, fora do Git. A origem compartilhada permanece intacta.
+
+Consulte [o registro da migração](docs/migracao-supabase/execucao.md) e [os scripts](supabase/migration-tools/README.md). A publicação no GitHub Pages foi adiada e ainda exige atualizar suas duas variáveis de ambiente e republicar. Não reaplique os scripts de criação no destino já preenchido.
+
+## Configurar Supabase compartilhado — procedimento anterior
 
 1. Faça um backup do projeto e revise a migração `supabase/migrations/202610300001_jubarte.sql`.
 2. Execute essa migração **uma única vez**, como proprietário, no SQL Editor do Supabase. Em seguida, execute também `supabase/migrations/202610310001_jubarte_loans.sql`, uma única vez. Elas usam exclusivamente objetos com prefixo `jubarte_` no schema `public`, sem alterar dados, tabelas ou configurações de outros aplicativos. Não execute `supabase db reset` neste projeto compartilhado.
